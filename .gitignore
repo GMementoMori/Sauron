@@ -5,3 +5,4 @@
 /mysql/data
 /logs/nginx/*.log
 /config
+.idea
