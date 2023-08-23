@@ -1,0 +1,5 @@
+#app/config/config.yml
+fos_elastica:
+  indexes:
+    app:
+      index_name: app_%kernel.environment%

@@ -1,0 +1,88 @@
+version: '3.6'
+services:
+  #PHP Service
+  elios_app:
+    build:
+      context: .
+      dockerfile: ./php-fpm/Dockerfile
+    container_name: elios_app
+    restart: unless-stopped
+    tty: true
+    expose:
+      - "9000"
+      - "9003"
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+      PHP_IDE_CONFIG: "serverName=elios"
+      PHP_XDEBUG_ENABLED: 1
+      XDEBUG_CONFIG: "remote_host=172.17.0.1 remote_enable=1 remote_autostart=0 idekey=PHPSTORM"
+    links:
+      - elios_redis
+      - elios_db
+    volumes:
+      - ./app:/var/www/elios:cached
+      - ./config/logs/php:/usr/local/etc/logs
+      - ./php-fpm/config/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:ro
+    working_dir: /var/www/elios
+    networks:
+      - elios-network
+
+  #Nginx Service
+  elios_webserver:
+    image: nginx:alpine
+    container_name: elios_webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./app:/var/www/elios:cached
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./logs/nginx:/var/log/nginx/
+    networks:
+      - elios-network
+
+  elios_db:
+    image: mysql:8.0
+    container_name: elios_db
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql:delegated
+      - ./mysql/config/import:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: parser
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root
+    networks:
+      - elios-network
+
+  #Redis Service
+  elios_redis:
+    image: redis:latest
+    container_name: elios_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - elios-network
+
+  elios_elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
+    container_name: elios_elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+    networks:
+      - elios-network
+
+#Docker Networks
+networks:
+  elios-network:
+    driver: bridge

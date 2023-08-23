@@ -1,0 +1,7 @@
+/app/.env
+/app/public/bundles/
+/app/var
+/app/vendor
+/mysql/data
+/logs/nginx/*.log
+/config

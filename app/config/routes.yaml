@@ -1,0 +1,14 @@
+# config/routes/attributes.yaml
+parser_route:
+  path: /parser
+  methods: [GET]
+  defaults:
+    _controller: App\Modules\Parser\Application\Controller\ParserController::index
+items_route:
+  path: /items/{parserName}
+  methods: [GET]
+  defaults:
+    _controller: App\Modules\Parser\Application\Controller\ItemsController::index
+kernel:
+  resource: App\Kernel
+  type: attribute

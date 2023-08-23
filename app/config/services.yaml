@@ -1,0 +1,74 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+  parsers:
+    olx:
+      url: 'https://www.olx.pl/nieruchomosci/mieszkania/wynajem/lodz/'
+      cardsXpath: '//div[@data-cy="l-card"]'
+      mainIfo:
+        title:
+          tagName: 'h6'
+          tagInfo: { }
+          return:
+            type: 'textContent'
+        image:
+          tagName: 'img'
+          tagInfo: { }
+          return:
+            type: 'attribute'
+            name: 'src'
+        link:
+          tagName: 'a'
+          tagInfo: { }
+          return:
+            type: 'attribute'
+            name: 'href'
+        price:
+          tagName: 'p'
+          tagInfo: { }
+          replace:
+            pattern: '/([0-9]*)\s([0-9]*)\sz.+/'
+            replacement: '$1$2'
+          return:
+            type: 'textContent'
+        area:
+          tagName: 'p'
+          tagInfo:
+            attributeName: 'data-testid'
+            attributeValue: 'location-date'
+          return:
+            type: 'textContent'
+        squareMeters:
+          tagName: 'span'
+          tagInfo: { }
+          replace:
+            pattern: '/([0-9]*)\sm.+/'
+            replacement: '$1'
+          return:
+            type: 'textContent'
+
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+  Elasticsearch\Client:
+    class: Elasticsearch\Client
+    arguments:
+      - { host: 'elios_elasticsearch', port: 9200 }
+
+  # makes classes in src/ available to be used as services
+  # this creates a service per class whose id is the fully-qualified class name
+  App\:
+    resource: '../src/'
+    exclude:
+      - '../src/DependencyInjection/'
+      - '../src/Entity/'
+      - '../src/Kernel.php'
+
+  # add more service definitions when explicit configuration is needed
+  # please note that last definitions always *replace* previous ones
